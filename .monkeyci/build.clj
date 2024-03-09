@@ -36,14 +36,16 @@
 
 (defn build-image [ctx]
   ;; TODO Replace with shell/container-work-dir when it becomes available
-  (let [wd (str "/opt/monkeyci/checkout/work/" (get-in ctx [:build :build-id]))]
+  (let [wd (str "/opt/monkeyci/checkout/work/" (get-in ctx [:build :build-id]))
+        docker-config (str (fs/path wd (:path docker-creds)))]
     (bc/container-job
      "build-image"
      {:image (str image ":" build-version)
-      :script [(format "cat %s/docker.json" wd)
+      :script ["mkdir -p /kaniko/.docker"
+               (format "cp -f %s /kaniko/.docker" docker-config)
                (format "/kaniko/executor --context %s --destination %s"
                        (str "dir://" wd) (str image ":" release-version))]
-      :container/env {"DOCKER_CONFIG" (str (fs/path wd (:path docker-creds)))}
+      :container/env {"DOCKER_CONFIG" docker-config}
       :dependencies ["generate-docker-creds"]
       :restore-artifacts [docker-creds]})))
 
