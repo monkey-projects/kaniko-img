@@ -42,6 +42,7 @@
      "build-image"
      {:image (str image ":" build-version)
       :script ["mkdir -p /kaniko/.docker"
+               "ls -l"
                (format "cp -f %s /kaniko/.docker" docker-config)
                (format "/kaniko/executor --context %s --destination %s"
                        (str "dir://" wd) (str image ":" release-version))]
