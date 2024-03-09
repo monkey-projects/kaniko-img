@@ -1,5 +1,6 @@
 (ns monkeyci-kaniko.build
-  (:require [cheshire.core :as json]
+  (:require [babashka.fs :as fs]
+            [cheshire.core :as json]
             [clojure.string :as cs]
             [monkey.ci.build
              [api :as api]
@@ -43,7 +44,7 @@
                          ;; TODO Replace with shell/container-work-dir when it becomes available
                          "--context" (str "dir://" wd)
                          "--destination" (str image ":" release-version)])]
-      :container/env {"DOCKER_CONFIG" (str wd (:path docker-creds))}
+      :container/env {"DOCKER_CONFIG" (str (fs/path wd (:path docker-creds)))}
       :dependencies ["generate-docker-creds"]
       :restore-artifacts [docker-creds]})))
 
