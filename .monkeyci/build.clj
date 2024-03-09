@@ -38,10 +38,10 @@
     (bc/container-job
      "build-image"
      {:image (str image ":" build-version)
-      :script ["/kaniko/executor"
-               ;; TODO Replace with shell/container-work-dir when it becomes available
-               "--context" (str "dir://" wd)
-               "--destination" (str image ":" release-version)]
+      :script [(str "/kaniko/executor"
+                    ;; TODO Replace with shell/container-work-dir when it becomes available
+                    " --context" (str "dir://" wd)
+                    " --destination" (str image ":" release-version))]
       :container/env {"DOCKER_CONFIG" (str wd (:path docker-creds))}
       :dependencies ["generate-docker-creds"]
       :restore-artifacts [docker-creds]})))
