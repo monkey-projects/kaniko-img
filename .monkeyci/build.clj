@@ -20,11 +20,11 @@
   (bc/action-job
    "generate-docker-creds"
    (fn [ctx]
-     (let [creds (->> (api/build-params ctx)
-                      (select-keys ["DOCKERHUB_USERNAME" "DOCKERHUB_PASSWORD"])
-                      (vals)
-                      (cs/join ":")
-                      (u/->base64))
+     (let [creds (-> (api/build-params ctx)
+                     (select-keys ["DOCKERHUB_USERNAME" "DOCKERHUB_PASSWORD"])
+                     (vals)
+                     (as-> s (cs/join ":" s))
+                     (u/->base64))
            json (json/generate-string
                  {"auths"
                   {"https://index.docker.io/v1/"
