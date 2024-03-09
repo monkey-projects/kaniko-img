@@ -35,7 +35,7 @@
    {:save-artifacts [docker-creds]}))
 
 (defn build-image [ctx]
-  (let [wd (str "/home/monkeyci/checkout/work/" (get-in ctx [:build :build-id]))]
+  (let [wd (str "/opt/monkeyci/checkout/work/" (get-in ctx [:build :build-id]))]
     (bc/container-job
      "build-image"
      {:image (str image ":" build-version)
