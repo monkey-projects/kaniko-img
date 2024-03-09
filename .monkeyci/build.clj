@@ -19,9 +19,9 @@
   (bc/action-job
    "generate-docker-creds"
    (fn [ctx]
-     (let [get-creds (juxt "DOCKERHUB_USERNAME" "DOCKERHUB_PASSWORD")
-           creds (->> (api/build-params ctx)
-                      (get-creds)
+     (let [creds (->> (api/build-params ctx)
+                      (select-keys ["DOCKERHUB_USERNAME" "DOCKERHUB_PASSWORD"])
+                      (vals)
                       (cs/join ":")
                       (u/->base64))
            json (json/generate-string
