@@ -12,8 +12,9 @@
 (def build-version "1.21.0")
 (def release-version "1.21.0")
 
+;; File must be called config.json by kaniko
 (def docker-creds {:id "docker-creds"
-                   :path "docker.json"})
+                   :path "config.json"})
 
 (def generate-docker-creds
   "Generates file that contains docker hub credentials"
@@ -40,13 +41,13 @@
         docker-config (str (fs/path wd (:path docker-creds)))]
     (bc/container-job
      "build-image"
+     ;; Kaniko can't build itself because it tries to copy over its own executable
+     ;; so we copy the executable to /tmp before proceeding
      {:image (str image ":" build-version)
-      :script ["mkdir -p /kaniko/.docker"
-               "ls -l"
-               (format "cp -f %s /kaniko/.docker" docker-config)
-               (format "/kaniko/executor --context %s --destination %s"
+      :script ["cp -rf /kaniko /tmp"
+               (format "/tmp/kaniko/executor --context %s --destination %s"
                        (str "dir://" wd) (str image ":" release-version))]
-      :container/env {"DOCKER_CONFIG" docker-config}
+      :container/env {"DOCKER_CONFIG" wd}
       :dependencies ["generate-docker-creds"]
       :restore-artifacts [docker-creds]})))
 
