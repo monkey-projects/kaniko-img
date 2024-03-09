@@ -35,15 +35,14 @@
    {:save-artifacts [docker-creds]}))
 
 (defn build-image [ctx]
+  ;; TODO Replace with shell/container-work-dir when it becomes available
   (let [wd (str "/opt/monkeyci/checkout/work/" (get-in ctx [:build :build-id]))]
     (bc/container-job
      "build-image"
      {:image (str image ":" build-version)
-      :script [(cs/join " "
-                        ["/kaniko/executor"
-                         ;; TODO Replace with shell/container-work-dir when it becomes available
-                         "--context" (str "dir://" wd)
-                         "--destination" (str image ":" release-version)])]
+      :script [(format "cat %s/docker.json" wd)
+               (format "/kaniko/executor --context %s --destination %s"
+                       (str "dir://" wd) (str image ":" release-version))]
       :container/env {"DOCKER_CONFIG" (str (fs/path wd (:path docker-creds)))}
       :dependencies ["generate-docker-creds"]
       :restore-artifacts [docker-creds]})))
