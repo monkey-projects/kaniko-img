@@ -36,13 +36,16 @@
        (spit file json)))
    {:save-artifacts [docker-creds]}))
 
+(defn- build-job-id [arch]
+  (str "build-image-" (name arch)))
+
 (defn build-image
   "Creates a job that builds the kaniko image for specified architecture."
   [arch]
   (fn [ctx]
     (let [wd (shell/container-work-dir ctx)]
       (bc/container-job
-       (str "build-image-" (name arch))
+       (build-job-id arch)
        ;; Kaniko can't build itself because it tries to copy over its own executable
        ;; so we copy the executable to /tmp before proceeding
        {:image (str image ":" build-version)
@@ -75,7 +78,7 @@
                      (str release-image "-ARCH")
                      release-image)]
     :restore-artifacts [docker-creds]
-    :dependencies (mapv bc/job-id build-jobs)}))
+    :dependencies (mapv build-job-id archs)}))
 
 ;; Jobs to run
 [generate-docker-creds
