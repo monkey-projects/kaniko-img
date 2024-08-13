@@ -39,6 +39,10 @@
 (defn- build-job-id [arch]
   (str "build-image-" (name arch)))
 
+(def archs
+  {:arm "arm64"
+   :amd "amd64"})
+
 (defn build-image
   "Creates a job that builds the kaniko image for specified architecture."
   [arch]
@@ -52,15 +56,13 @@
         :script ["cp -rf /kaniko /tmp"
                  (format "/tmp/kaniko/executor --context %s --destination %s"
                          (str "dir://" wd)
-                         (str release-image "-" (name arch)))]
+                         (str release-image "-" (archs arch)))]
         :arch arch
         :container/env {"DOCKER_CONFIG" wd}
         :dependencies ["generate-docker-creds"]
         :restore-artifacts [docker-creds]}))))
 
-(def archs [:arm :amd])
-
-(def build-jobs (mapv build-image archs))
+(def build-jobs (mapv build-image (keys archs)))
 
 (defn publish-manifest
   "Uses manifest-tool to merge the images built for several architectures into one
@@ -70,15 +72,16 @@
    "publish-manifest"
    ;; TODO Switch to mplatform/manifest-tool as soon as MonkeyCI allows shell-less containers
    {:image "docker.io/monkeyci/manifest-tool:2.1.7"
-    :script [(format "/manifest-tool push --docker-cfg=%s push from-args --platforms=%s --template %s --target %s"
+    :script [(format "/manifest-tool --docker-cfg=%s push from-args --platforms %s --template %s --target %s"
                      (str (shell/container-work-dir ctx) "/" (:path docker-creds))
                      (->> archs
-                          (map (comp (partial str "linux/") name))
+                          vals
+                          (map (partial str "linux/"))
                           (cs/join ","))
                      (str release-image "-ARCH")
                      release-image)]
     :restore-artifacts [docker-creds]
-    :dependencies (mapv build-job-id archs)}))
+    :dependencies (mapv build-job-id (keys archs))}))
 
 ;; Jobs to run
 [generate-docker-creds
