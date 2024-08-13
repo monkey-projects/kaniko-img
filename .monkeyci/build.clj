@@ -70,7 +70,7 @@
    "publish-manifest"
    ;; TODO Switch to mplatform/manifest-tool as soon as MonkeyCI allows shell-less containers
    {:image "docker.io/monkeyci/manifest-tool:2.1.7"
-    :script [(format "/manifest-tool --docker-cfg=%s push from-args --platforms=%s --template %s --target %s"
+    :script [(format "/manifest-tool push --docker-cfg=%s push from-args --platforms=%s --template %s --target %s"
                      (str (shell/container-work-dir ctx) "/" (:path docker-creds))
                      (->> archs
                           (map (comp (partial str "linux/") name))
