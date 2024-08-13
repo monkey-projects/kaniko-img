@@ -10,7 +10,7 @@
 
 (def image "docker.io/monkeyci/kaniko")
 (def build-version "1.21.0")
-(def release-version "1.21.0")
+(def release-version "1.23.2")
 
 ;; File must be called config.json by kaniko
 (def docker-creds {:id "docker-creds"

@@ -1,4 +1,4 @@
-FROM gcr.io/kaniko-project/executor:v1.21.0-debug AS kaniko
+FROM gcr.io/kaniko-project/executor:v1.23.2-debug AS kaniko
 
 FROM docker.io/busybox:latest AS busybox
 
