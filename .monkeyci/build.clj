@@ -75,7 +75,7 @@
                      (str release-image "-ARCH")
                      release-image)]
     :restore-artifacts [docker-creds]
-    :dependencies (map bc/job-id build-jobs)}))
+    :dependencies (mapv bc/job-id build-jobs)}))
 
 ;; Jobs to run
 [generate-docker-creds
