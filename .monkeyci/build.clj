@@ -39,34 +39,36 @@
 (defn build-image
   "Creates a job that builds the kaniko image for specified architecture."
   [arch]
-  (let [wd shell/container-work-dir]
-    (bc/container-job
-     (str "build-image-" (:name arch))
-     ;; Kaniko can't build itself because it tries to copy over its own executable
-     ;; so we copy the executable to /tmp before proceeding
-     {:image (str image ":" build-version)
-      :script ["cp -rf /kaniko /tmp"
-               (format "/tmp/kaniko/executor --context %s --destination %s"
-                       (str "dir://" wd)
-                       (str release-image "-" (name arch)))]
-      :arch arch
-      :container/env {"DOCKER_CONFIG" wd}
-      :dependencies ["generate-docker-creds"]
-      :restore-artifacts [docker-creds]})))
+  (fn [ctx]
+    (let [wd (shell/container-work-dir ctx)]
+      (bc/container-job
+       (str "build-image-" (name arch))
+       ;; Kaniko can't build itself because it tries to copy over its own executable
+       ;; so we copy the executable to /tmp before proceeding
+       {:image (str image ":" build-version)
+        :script ["cp -rf /kaniko /tmp"
+                 (format "/tmp/kaniko/executor --context %s --destination %s"
+                         (str "dir://" wd)
+                         (str release-image "-" (name arch)))]
+        :arch arch
+        :container/env {"DOCKER_CONFIG" wd}
+        :dependencies ["generate-docker-creds"]
+        :restore-artifacts [docker-creds]}))))
 
 (def archs [:arm :amd])
 
 (def build-jobs (mapv build-image archs))
 
-(def publish-manifest
+(defn publish-manifest
   "Uses manifest-tool to merge the images built for several architectures into one
    manifest and pushes it."
+  [ctx]
   (bc/container-job
    "publish-manifest"
    ;; TODO Switch to mplatform/manifest-tool as soon as MonkeyCI allows shell-less containers
    {:image "docker.io/monkeyci/manifest-tool:2.1.7"
     :script [(format "/manifest-tool --docker-cfg=%s push from-args --platforms=%s --template %s --target %s"
-                     (str shell/container-work-dir "/" (:path docker-creds))
+                     (str (shell/container-work-dir ctx) "/" (:path docker-creds))
                      (->> archs
                           (map (comp (partial str "linux/") name))
                           (cs/join ","))
